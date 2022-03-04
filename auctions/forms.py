@@ -7,3 +7,7 @@ class CreateListingForm(forms.Form):
     price = forms.DecimalField(label='Starting price', max_digits=10, decimal_places=2)
     image = forms.URLField(required=False)
     category = forms.ChoiceField(choices=CATEGORIES, label='Category', required=False)
+
+class CommentForm(forms.Form):
+    id = forms.IntegerField(required=True)
+    comment = forms.CharField(max_length=150, required=True)

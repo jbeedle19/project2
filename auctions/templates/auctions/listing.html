@@ -1,0 +1,43 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>{{ item.title }}</h2>
+
+    {% if item.image_url %}
+        <div>
+            <img src='{{ item.image_url }}' alt='{{ item.title }}' width='200px' />
+        </div>
+    {% endif %}
+
+    <p>{{ item.description }}</p>
+    <p>Current Bid: ${{ item.price }}</p>
+    <p>Category: {{ item.category }}</p>
+
+    {% if user.is_authenticated %}
+        <form action="" method="post">
+            <input type="hidden" name="id" value="{{ item.id }}">
+            {% if watchlist %}
+                <button class="btn btn-danger" type="submit" formaction="">Remove from Watchlist</button>
+            {% else %}
+                <button class="btn btn-success" type="submit" formaction="">Add to Watchlist</button>
+            {% endif %}
+        </form>
+    {% endif %}
+
+    <h5>Comments:</h5>
+    <ul>
+        {% for comment in comments %}
+            <li>{{ comment }} - {{ comment.created | date:"M j, Y"}}</li>
+        {% empty %}
+            <li>No Comments</li>
+        {% endfor %}
+    </ul>
+    {% if user.is_authenticated %}
+        <form action="{% url 'comment' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="id" value="{{ item.id }}">
+            <input type="text" name="comment" placeholder="Comment...">
+            <button class="btn btn-primary" type="submit">Add Comment</button>
+        </form>
+    {% endif %}
+{% endblock %}

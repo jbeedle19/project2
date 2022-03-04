@@ -2,17 +2,44 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 
 from .models import User, Listing, Bid, Comment
-from .forms import CreateListingForm
+from .forms import CreateListingForm, CommentForm
 
 
 def index(request):
     return render(request, "auctions/index.html", {
         'listings': Listing.objects.all()
     })
+
+# Not working, need to handle incorrect form entries!
+@login_required(login_url='/login')
+def comment(request):
+    form = CommentForm(request.POST)
+
+    if form.is_valid():
+        id = form.cleaned_data['id']
+        commentText = form.cleaned_data['comment']
+
+        if request.user.is_authenticated:
+                user = request.user
+        else:
+            return render(request, "auctions/listing.html", {
+                'message': ' Please login and try again'
+            })
+
+        item = Listing.objects.get(id=id)
+        c = Comment(user=user, item=item, comment=commentText)
+        c.save()
+
+        return redirect('listing', id=id)
+
+    else:
+        return render(request, "auctions/listing.html", {
+            'message': 'Something went wrong, please try again'
+        })
 
 @login_required(login_url='/login')
 def create(request):
@@ -30,7 +57,7 @@ def create(request):
                 user = request.user
             else:
                 return render(request, "auctions/create.html", {
-                    'message': 'Please login and try again',
+                    'message': ' Please login and try again',
                     'form': form
                 })
 
@@ -41,7 +68,7 @@ def create(request):
 
         else:
             return render(request, "auctions/create.html", {
-                'message': 'Please make sure you provide a name, description, and price',
+                'message': "Please fill out name, description and price and try again",
                 'form': form
             })
     else:
@@ -49,6 +76,16 @@ def create(request):
         return render(request, "auctions/create.html", {
             'form': form
         })
+
+def listing(request, id):
+    item = Listing.objects.get(id=id)
+    comments = item.comments.all()
+
+    return render(request, "auctions/listing.html", {
+        'item': item,
+        'comments': comments,
+        'watchlist': False
+    })
 
 def login_view(request):
     if request.method == "POST":
