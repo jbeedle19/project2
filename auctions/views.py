@@ -10,7 +10,9 @@ from .forms import CreateListingForm
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+    return render(request, "auctions/index.html", {
+        'listings': Listing.objects.all()
+    })
 
 @login_required(login_url='/login')
 def create(request):
@@ -21,7 +23,7 @@ def create(request):
             title = form.cleaned_data['title']
             description = form.cleaned_data['description']
             price = form.cleaned_data['price']
-            image = form.cleaned_data['price']
+            image = form.cleaned_data['image']
             category = form.cleaned_data['category']
 
             if request.user.is_authenticated:
