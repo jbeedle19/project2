@@ -5,7 +5,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User
+from .models import User, Listing, Bid, Comment
 from .forms import CreateListingForm
 
 
@@ -15,7 +15,6 @@ def index(request):
 @login_required(login_url='/login')
 def create(request):
     if request.method == "POST":
-
         form = CreateListingForm(request.POST)
 
         if form.is_valid():
@@ -24,8 +23,20 @@ def create(request):
             price = form.cleaned_data['price']
             image = form.cleaned_data['price']
             category = form.cleaned_data['category']
-            print("SUCCESS!")
-            pass
+
+            if request.user.is_authenticated:
+                user = request.user
+            else:
+                return render(request, "auctions/create.html", {
+                    'message': 'Please login and try again',
+                    'form': form
+                })
+
+            i = Listing(user=user, title=title, description=description, price=price, image_url=image, category=category)
+            i.save()
+
+            return HttpResponseRedirect(reverse("index"))
+
         else:
             return render(request, "auctions/create.html", {
                 'message': 'Please make sure you provide a name, description, and price',

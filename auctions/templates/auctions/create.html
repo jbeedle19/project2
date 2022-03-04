@@ -17,19 +17,24 @@
     <form action="{% url 'create' %}" method="post">
         {% csrf_token %}
         <div class="form-group">
-            {{ form.title.label }}: {{ form.title }}
+            <div>{{ form.title.label }}:<span class="required"> *</span></div>
+            <div>{{ form.title }}</div>
         </div>
         <div class="form-group">
-            {{ form.description.label }}: {{ form.description }}
+            <div>{{ form.description.label }}:<span class="required"> *</span></div>
+            <div>{{ form.description }}</div>
         </div>
         <div class="form-group">
-            {{ form.price.label }}: ${{ form.price }}
+            <div>{{ form.price.label }}:<span class="required"> *</span></div>
+            <div>$ {{ form.price }}</div>
         </div>
         <div class="form-group">
-            {{ form.image.label }}: {{ form.image }}
+            <div>{{ form.image.label }}:</div>
+            <div>{{ form.image }}</div>
         </div>
         <div class="form-group">
-            {{ form.category.label }}: {{ form.category }}
+            <div>{{ form.category.label }}:</div>
+            <div>{{ form.category }}</div>
         </div>
         <input class="btn btn-primary" type="submit" value="Create">
     </form>
