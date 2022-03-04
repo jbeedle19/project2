@@ -1,15 +1,41 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
 from .models import User
+from .forms import CreateListingForm
 
 
 def index(request):
     return render(request, "auctions/index.html")
 
+@login_required(login_url='/login')
+def create(request):
+    if request.method == "POST":
+
+        form = CreateListingForm(request.POST)
+
+        if form.is_valid():
+            title = form.cleaned_data['title']
+            description = form.cleaned_data['description']
+            price = form.cleaned_data['price']
+            image = form.cleaned_data['price']
+            category = form.cleaned_data['category']
+            print("SUCCESS!")
+            pass
+        else:
+            return render(request, "auctions/create.html", {
+                'message': 'Please make sure you provide a name, description, and price',
+                'form': form
+            })
+    else:
+        form = CreateListingForm()
+        return render(request, "auctions/create.html", {
+            'form': form
+        })
 
 def login_view(request):
     if request.method == "POST":
