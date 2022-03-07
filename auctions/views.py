@@ -5,7 +5,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
 
-from .models import User, Listing, Bid, Comment
+from .models import User, Listing, Bid, Comment, Watchlist
 from .forms import CreateListingForm, CommentForm
 
 
@@ -13,6 +13,17 @@ def index(request):
     return render(request, "auctions/index.html", {
         'listings': Listing.objects.all()
     })
+
+@login_required(login_url='/login')
+def add_watch(request):
+    itemID = request.POST['id']
+    item = Listing.objects.get(id=itemID)
+    user = request.user
+
+    w = Watchlist(user=user, item=item)
+    w.save()
+
+    return redirect('listing', id=itemID)
 
 # Not working, need to handle incorrect form entries!
 @login_required(login_url='/login')
@@ -80,11 +91,19 @@ def create(request):
 def listing(request, id):
     item = Listing.objects.get(id=id)
     comments = item.comments.all()
+    watchlist = False
+
+    if request.user.is_authenticated:
+        try:
+            if item.watching.get(user=request.user):
+                watchlist = True
+        except:
+            watchlist = False
 
     return render(request, "auctions/listing.html", {
         'item': item,
         'comments': comments,
-        'watchlist': False
+        'watchlist': watchlist,
     })
 
 def login_view(request):
@@ -137,3 +156,7 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
+
+@login_required(login_url='/login')
+def remove_watch(request):
+    pass

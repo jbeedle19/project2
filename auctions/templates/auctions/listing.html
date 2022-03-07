@@ -15,11 +15,12 @@
 
     {% if user.is_authenticated %}
         <form action="" method="post">
+            {% csrf_token %}
             <input type="hidden" name="id" value="{{ item.id }}">
             {% if watchlist %}
-                <button class="btn btn-danger" type="submit" formaction="">Remove from Watchlist</button>
+                <button class="btn btn-danger" type="submit" formaction="{% url 'remove' %}">Remove from Watchlist</button>
             {% else %}
-                <button class="btn btn-success" type="submit" formaction="">Add to Watchlist</button>
+                <button class="btn btn-success" type="submit" formaction="{% url 'add' %}">Add to Watchlist</button>
             {% endif %}
         </form>
     {% endif %}
