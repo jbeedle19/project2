@@ -11,3 +11,7 @@ class CreateListingForm(forms.Form):
 class CommentForm(forms.Form):
     id = forms.IntegerField(required=True)
     comment = forms.CharField(max_length=150, required=True)
+
+class BidForm(forms.Form):
+    id = forms.IntegerField(required=True)
+    bid = forms.DecimalField(label='Bid', max_digits=10, decimal_places=2)

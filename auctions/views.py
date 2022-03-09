@@ -6,12 +6,13 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 
 from .models import User, Listing, Bid, Comment, Watchlist
-from .forms import CreateListingForm, CommentForm
+from .forms import CreateListingForm, CommentForm, BidForm
+from .categories import CATEGORIES
 
 
 def index(request):
     return render(request, "auctions/index.html", {
-        'listings': Listing.objects.all()
+        'listings': Listing.objects.filter(active=True)
     })
 
 @login_required(login_url='/login')
@@ -25,6 +26,53 @@ def add_watch(request):
 
     return redirect('listing', id=itemID)
 
+@login_required(login_url='/login')
+def bid(request):
+    form = BidForm(request.POST)
+
+    if form.is_valid():
+        bid = form.cleaned_data['bid']
+        id = form.cleaned_data['id']
+        user = request.user
+        item = Listing.objects.get(id=id)
+        currentBid = item.price
+
+        if bid > currentBid:
+            # update price of item with new bid
+            item.price = bid
+            item.save()
+            # add bid to bid table
+            b = Bid(user=user, item=item, bid=bid)
+            b.save()
+
+        else:
+            return render(request, "auctions/error.html", {
+            'message': 'This bid is too low, make sure your bid is greater than the current bid and try again.'
+        })
+
+        return redirect('listing', id=id)
+
+    else:
+        return render(request, "auctions/error.html", {
+            'message': form.errors
+        })
+
+@login_required(login_url='/login')
+def categories(request):
+
+    return render(request, "auctions/categories.html", {
+        'categories': dict(CATEGORIES)
+    })
+
+@login_required(login_url='/login')
+def category(request, id, category):
+    listings = Listing.objects.filter(category=id)
+
+    return render(request, "auctions/category.html", {
+        'listings': listings,
+        'category': category
+    })
+
 # Not working, need to handle incorrect form entries!
 @login_required(login_url='/login')
 def comment(request):
@@ -33,13 +81,7 @@ def comment(request):
     if form.is_valid():
         id = form.cleaned_data['id']
         commentText = form.cleaned_data['comment']
-
-        if request.user.is_authenticated:
-                user = request.user
-        else:
-            return render(request, "auctions/listing.html", {
-                'message': ' Please login and try again'
-            })
+        user = request.user
 
         item = Listing.objects.get(id=id)
         c = Comment(user=user, item=item, comment=commentText)
@@ -48,9 +90,19 @@ def comment(request):
         return redirect('listing', id=id)
 
     else:
-        return render(request, "auctions/listing.html", {
-            'message': 'Something went wrong, please try again'
+        return render(request, "auctions/error.html", {
+            'message': form.errors
         })
+
+@login_required(login_url='/login')
+def close(request):
+    id = request.POST['id']
+    item = Listing.objects.get(id=id)
+
+    item.active = False
+    item.save()
+
+    return redirect('listing', id=id)
 
 @login_required(login_url='/login')
 def create(request):
@@ -91,19 +143,26 @@ def create(request):
 def listing(request, id):
     item = Listing.objects.get(id=id)
     comments = item.comments.all()
+    active = item.active
     watchlist = False
+    creator = False
 
     if request.user.is_authenticated:
         try:
             if item.watching.get(user=request.user):
                 watchlist = True
+            if item.user == request.user:
+                creator = True
         except:
             watchlist = False
-
+            creator = False
+    print(creator)
     return render(request, "auctions/listing.html", {
         'item': item,
         'comments': comments,
         'watchlist': watchlist,
+        'creator': creator,
+        'active': active
     })
 
 def login_view(request):
@@ -159,4 +218,20 @@ def register(request):
 
 @login_required(login_url='/login')
 def remove_watch(request):
-    pass
+    itemID = request.POST['id']
+    item = Listing.objects.get(id=itemID)
+    user = request.user
+
+    r = Watchlist.objects.filter(user=user, item=item)
+    print(f"Deleting - {r}")
+    r.delete()
+
+    return redirect('listing', id=itemID)
+
+@login_required(login_url='/login')
+def watchlist(request):
+    watching = Watchlist.objects.filter(user=request.user)
+
+    return render(request, "auctions/watchlist.html", {
+        'listings': watching
+    })

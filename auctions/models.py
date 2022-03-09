@@ -13,9 +13,10 @@ class Listing(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     image_url = models.URLField(blank=True)
     category = models.IntegerField(blank=True, choices=CATEGORIES)
+    active = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Item {self.id}: Seller - {self.user}, Title - {self.title}, Description - {self.description}, Price - ${self.price}, Image: {self.image_url}, Category - {self.category}"
+        return f"Item {self.id}: Seller - {self.user}, Title - {self.title}, Description - {self.description}, Price - ${self.price}, Image: {self.image_url}, Category - {self.category} Active - {self.active}"
 
 class Bid(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bids')
