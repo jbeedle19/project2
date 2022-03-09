@@ -66,7 +66,7 @@ def categories(request):
 
 @login_required(login_url='/login')
 def category(request, id, category):
-    listings = Listing.objects.filter(category=id)
+    listings = Listing.objects.filter(category=id, active=True)
 
     return render(request, "auctions/category.html", {
         'listings': listings,
@@ -146,6 +146,12 @@ def listing(request, id):
     active = item.active
     watchlist = False
     creator = False
+    lastBid = None
+
+    try:
+        lastBid = Bid.objects.filter(item=item).latest('item')
+    except:
+        lastBid = None
 
     if request.user.is_authenticated:
         try:
@@ -156,13 +162,14 @@ def listing(request, id):
         except:
             watchlist = False
             creator = False
-    print(creator)
+
     return render(request, "auctions/listing.html", {
         'item': item,
         'comments': comments,
         'watchlist': watchlist,
         'creator': creator,
-        'active': active
+        'active': active,
+        'lastBid': lastBid
     })
 
 def login_view(request):
@@ -223,7 +230,6 @@ def remove_watch(request):
     user = request.user
 
     r = Watchlist.objects.filter(user=user, item=item)
-    print(f"Deleting - {r}")
     r.delete()
 
     return redirect('listing', id=itemID)
